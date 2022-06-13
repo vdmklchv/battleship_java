@@ -72,9 +72,7 @@ public class Player {
                 int[][] occupiedCells = Helpers.calculateOccupiedCells(coordinates[0], coordinates[1], numberOfCells);
                 Helpers.checkInitialCoordinatesValidity(name, numberOfCells, coordinates[0], coordinates[1], field, occupiedCells);
                 return new Ship(name, numberOfCells, coordinates[0], coordinates[1], occupiedCells);
-            } catch (WrongCoordinatesException e) {
-                System.out.println(e.getMessage());
-            } catch (IllegalArgumentException e) {
+            } catch (WrongCoordinatesException | IllegalArgumentException e) {
                 System.out.println(e.getMessage());
             }
         }
