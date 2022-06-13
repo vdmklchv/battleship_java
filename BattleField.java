@@ -3,6 +3,10 @@ package battleship;
 import java.util.Arrays;
 
 class BattleField {
+    enum FIELD_TYPES {
+        PUBLIC_FIELD, PRIVATE_FIELD
+    }
+
     // CONSTANTS
     static final int DEFAULT_FIELD_SIZE = 10;
     // FIELDS
@@ -12,7 +16,9 @@ class BattleField {
         return size;
     }
 
-    private final String[][] startingField;
+    private final String[][] baseField;
+
+    private final String[][] currentField;
 
     // CONSTRUCTORS
 
@@ -22,7 +28,8 @@ class BattleField {
 
     public BattleField(int size) {
         this.size = size;
-        this.startingField = createEmptyField(this.size);
+        this.baseField = createEmptyField(this.size);
+        this.currentField = createEmptyField(this.size);
     }
 
     private String[][] createEmptyField(int size) {
@@ -34,10 +41,10 @@ class BattleField {
     }
 
     String getCellData(int x, int y) {
-        return this.startingField[x][y];
+        return this.baseField[x][y];
     }
 
-    void printCurrentField() {
+    void printField(FIELD_TYPES type) {
         // create letter coordinate array
         String[] letterCoordinateArray = createLetterCoordinateArray(this.size);
 
@@ -48,9 +55,11 @@ class BattleField {
         }
         System.out.println();
 
+        String[][] field = type == FIELD_TYPES.PRIVATE_FIELD ? this.baseField : this.currentField;
+
         // print field and append letter coordinate in front
         for (int i = 0; i < this.size; i++) {
-            String[] row = this.startingField[i];
+            String[] row = field[i];
             String letterCoordinate = letterCoordinateArray[i];
             System.out.printf("%s %s", letterCoordinate, String.join(" ", row));
             System.out.println();
@@ -74,16 +83,17 @@ class BattleField {
         int[][] occupiedCells = ship.getOccupiedCells();
 
         for (int[] cellCoordinate: occupiedCells) {
-            startingField[cellCoordinate[0]][cellCoordinate[1]] = "O";
+            baseField[cellCoordinate[0]][cellCoordinate[1]] = "O";
         }
     }
 
     boolean isHit(int[] coordinates) {
-        return "O".equals(startingField[coordinates[0]][coordinates[1]]);
+        return "O".equals(baseField[coordinates[0]][coordinates[1]]);
     }
 
-    void updateField(int[] coordinates, String value) {
-        startingField[coordinates[0]][coordinates[1]] = value;
+    void updateFields(int[] coordinates, String value) {
+        baseField[coordinates[0]][coordinates[1]] = value;
+        currentField[coordinates[0]][coordinates[1]] = value;
     }
 
 }

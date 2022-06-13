@@ -9,12 +9,15 @@ class App {
     }
 
     void start() {
+        // Prepare game field
         BattleField bf1 = new BattleField();
-        bf1.printCurrentField();
+        bf1.printField(BattleField.FIELD_TYPES.PRIVATE_FIELD);
         System.out.println();
         placeShips(bf1);
-        System.out.println("The game starts");
-        bf1.printCurrentField();
+
+        // Start game
+        System.out.println("The game starts!\n");
+        bf1.printField(BattleField.FIELD_TYPES.PUBLIC_FIELD);
         hit(bf1);
 
     }
@@ -22,19 +25,19 @@ class App {
     private void placeShips(BattleField field)  {
         Ship aircraftCarrier = createShip(SHIP_TYPES.AIRCRAFT_CARRIER, field);
         field.placeShip(aircraftCarrier);
-        field.printCurrentField();
+        field.printField(BattleField.FIELD_TYPES.PRIVATE_FIELD);
         Ship battleShip = createShip(SHIP_TYPES.BATTLESHIP, field);
         field.placeShip(battleShip);
-        field.printCurrentField();
+        field.printField(BattleField.FIELD_TYPES.PRIVATE_FIELD);
         Ship submarine = createShip(SHIP_TYPES.SUBMARINE, field);
         field.placeShip(submarine);
-        field.printCurrentField();
+        field.printField(BattleField.FIELD_TYPES.PRIVATE_FIELD);
         Ship cruiser = createShip(SHIP_TYPES.CRUISER, field);
         field.placeShip(cruiser);
-        field.printCurrentField();
+        field.printField(BattleField.FIELD_TYPES.PRIVATE_FIELD);
         Ship destroyer = createShip(SHIP_TYPES.DESTROYER, field);
         field.placeShip(destroyer);
-        field.printCurrentField();
+        field.printField(BattleField.FIELD_TYPES.PRIVATE_FIELD);
     }
 
     private void checkInitialCoordinatesValidity(String name, int numOfCells, int[] startCoordinates, int[] endCoordinates, BattleField field, int[][] occupiedCells) throws WrongCoordinatesException {
@@ -137,7 +140,7 @@ class App {
         Scanner sc = new Scanner(System.in);
         String coordinatesAsString = sc.next();
         try {
-            int coordinate1 = convertLetterCoordinateToInteger(String.valueOf(coordinatesAsString.charAt(0)));
+            int coordinate1 = convertLetterCoordinateToInteger(String.valueOf(coordinatesAsString.charAt(0)).toUpperCase());
             int coordinate2 = Integer.parseInt(coordinatesAsString.substring(1)) - 1;
             return new int[]{coordinate1, coordinate2};
         } catch (IllegalArgumentException e) {
@@ -156,13 +159,15 @@ class App {
             coordinates = getHitCoordinates();
         }
         if (field.isHit(coordinates)) {
-            field.updateField(coordinates, "X");
+            field.updateFields(coordinates, "X");
+            field.printField(BattleField.FIELD_TYPES.PUBLIC_FIELD);
             System.out.println("You hit a ship!");
         } else {
-            field.updateField(coordinates, "M");
+            field.updateFields(coordinates, "M");
+            field.printField(BattleField.FIELD_TYPES.PUBLIC_FIELD);
             System.out.println("You missed!");
         }
-        field.printCurrentField();
+        field.printField(BattleField.FIELD_TYPES.PRIVATE_FIELD);
     }
 
     private Ship createShip(SHIP_TYPES type, BattleField field) {
