@@ -3,10 +3,15 @@ package battleship;
 import java.util.Scanner;
 
 class App {
+    enum GAME_STATE {
+        IN_PROGRESS, FINISHED
+    }
 
     enum SHIP_TYPES {
         AIRCRAFT_CARRIER, BATTLESHIP, SUBMARINE, CRUISER, DESTROYER
     }
+
+    GAME_STATE state = GAME_STATE.IN_PROGRESS;
 
     void start() {
         // Prepare game field
@@ -17,9 +22,15 @@ class App {
 
         // Start game
         System.out.println("The game starts!\n");
-        bf1.printField(BattleField.FIELD_TYPES.PUBLIC_FIELD);
-        hit(bf1);
 
+        bf1.printField(BattleField.FIELD_TYPES.PUBLIC_FIELD);
+
+        System.out.println("Take a shot!");
+
+        while (state == GAME_STATE.IN_PROGRESS) {
+            hit(bf1);
+        }
+        System.out.println("You sank the last ship. You won. Congratulations!");
     }
 
     private void placeShips(BattleField field)  {
@@ -151,23 +162,35 @@ class App {
     }
 
     private void hit(BattleField field) {
-        System.out.println("Take a shot!");
         int[] coordinates = getHitCoordinates();
         while (coordinates[0] < 0 || coordinates[1] < 0 || coordinates[0] > field.getSize() - 1
         || coordinates[1] > field.getSize() - 1) {
-            System.out.println("Error! You entered the wrong coordinates! Try again:");
+            System.out.println("Error! You entered the wrong coordinates! Try again:\n");
             coordinates = getHitCoordinates();
         }
         if (field.isHit(coordinates)) {
             field.updateFields(coordinates, "X");
             field.printField(BattleField.FIELD_TYPES.PUBLIC_FIELD);
-            System.out.println("You hit a ship!");
+            System.out.println();
+            // find a ship
+            Ship foundShip = field.findShipAtCoordinates(coordinates);
+            // UPDATE SHIP COORDINATES TO REFLECT DAMAGE
+            foundShip.takeHit(coordinates);
+            // CHECK IF SHIP IS SANK
+            if (foundShip.isShipSank()) {
+                System.out.println("You sank a ship! Specify a new target:\n");
+            } else {
+                System.out.println("You hit a ship! Try again:\n");
+            }
+            // CHECK IF GAME IS OVER
+            if (field.isGameOver()) {
+                state = GAME_STATE.FINISHED;
+            }
         } else {
             field.updateFields(coordinates, "M");
             field.printField(BattleField.FIELD_TYPES.PUBLIC_FIELD);
-            System.out.println("You missed!");
+            System.out.println("You missed! Try again:\n");
         }
-        field.printField(BattleField.FIELD_TYPES.PRIVATE_FIELD);
     }
 
     private Ship createShip(SHIP_TYPES type, BattleField field) {

@@ -1,6 +1,8 @@
 package battleship;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 class BattleField {
     enum FIELD_TYPES {
@@ -16,9 +18,11 @@ class BattleField {
         return size;
     }
 
-    private final String[][] baseField;
+    private final String[][] privateField;
 
     private final String[][] currentField;
+
+    private final List<Ship> ships = new ArrayList<>();
 
     // CONSTRUCTORS
 
@@ -28,7 +32,7 @@ class BattleField {
 
     public BattleField(int size) {
         this.size = size;
-        this.baseField = createEmptyField(this.size);
+        this.privateField = createEmptyField(this.size);
         this.currentField = createEmptyField(this.size);
     }
 
@@ -41,7 +45,7 @@ class BattleField {
     }
 
     String getCellData(int x, int y) {
-        return this.baseField[x][y];
+        return this.privateField[x][y];
     }
 
     void printField(FIELD_TYPES type) {
@@ -55,7 +59,7 @@ class BattleField {
         }
         System.out.println();
 
-        String[][] field = type == FIELD_TYPES.PRIVATE_FIELD ? this.baseField : this.currentField;
+        String[][] field = type == FIELD_TYPES.PRIVATE_FIELD ? this.privateField : this.currentField;
 
         // print field and append letter coordinate in front
         for (int i = 0; i < this.size; i++) {
@@ -83,17 +87,43 @@ class BattleField {
         int[][] occupiedCells = ship.getOccupiedCells();
 
         for (int[] cellCoordinate: occupiedCells) {
-            baseField[cellCoordinate[0]][cellCoordinate[1]] = "O";
+            privateField[cellCoordinate[0]][cellCoordinate[1]] = "O";
         }
+        saveShip(ship);
+    }
+
+    private void saveShip(Ship ship) {
+        this.ships.add(ship);
     }
 
     boolean isHit(int[] coordinates) {
-        return "O".equals(baseField[coordinates[0]][coordinates[1]]);
+        return "O".equals(privateField[coordinates[0]][coordinates[1]])
+                || "X".equals(privateField[coordinates[0]][coordinates[1]]);
     }
 
     void updateFields(int[] coordinates, String value) {
-        baseField[coordinates[0]][coordinates[1]] = value;
+        privateField[coordinates[0]][coordinates[1]] = value;
         currentField[coordinates[0]][coordinates[1]] = value;
     }
 
+    Ship findShipAtCoordinates(int[] coordinates) {
+        for (Ship ship: ships) {
+            int[][] occupiedCells = ship.getOccupiedCells();
+            for (int[] cell: occupiedCells) {
+                if (Arrays.equals(cell, coordinates)) {
+                    return ship;
+                }
+            }
+        }
+        return null;
+    }
+
+    boolean isGameOver() {
+        for (Ship ship: ships) {
+            if (!ship.isShipSank()) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
