@@ -24,6 +24,17 @@ class BattleField {
 
     private final List<Ship> ships = new ArrayList<>();
 
+    // GETTERS
+
+    public String[][] getPrivateField() {
+        return privateField;
+    }
+
+    public String[][] getCurrentField() {
+        return currentField;
+    }
+
+
     // CONSTRUCTORS
 
     public BattleField() {
@@ -36,6 +47,8 @@ class BattleField {
         this.currentField = createEmptyField(this.size);
     }
 
+    // Methods
+
     private String[][] createEmptyField(int size) {
         String[][] startingFieldArray = new String[size][size];
         for (String[] row: startingFieldArray) {
@@ -46,41 +59,6 @@ class BattleField {
 
     String getCellData(int x, int y) {
         return this.privateField[x][y];
-    }
-
-    void printField(FIELD_TYPES type) {
-        // create letter coordinate array
-        String[] letterCoordinateArray = createLetterCoordinateArray(this.size);
-
-        // print header
-        System.out.print("  ");
-        for (int i = 1; i <= this.size; i++) {
-            System.out.print(i + " ");
-        }
-        System.out.println();
-
-        String[][] field = type == FIELD_TYPES.PRIVATE_FIELD ? this.privateField : this.currentField;
-
-        // print field and append letter coordinate in front
-        for (int i = 0; i < this.size; i++) {
-            String[] row = field[i];
-            String letterCoordinate = letterCoordinateArray[i];
-            System.out.printf("%s %s", letterCoordinate, String.join(" ", row));
-            System.out.println();
-        }
-    }
-
-    private String[] createLetterCoordinateArray(int size) {
-        String[] letterCoordinateArray = new String[size];
-
-        char start = 'A';
-        letterCoordinateArray[0] = String.valueOf(start);
-
-        for (int i = 1; i < this.size; i++) {
-            letterCoordinateArray[i] = String.valueOf((char) (start + i));
-        }
-
-        return letterCoordinateArray;
     }
 
     void placeShip(Ship ship) {

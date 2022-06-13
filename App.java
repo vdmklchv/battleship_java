@@ -1,265 +1,92 @@
 package battleship;
 
-import java.util.Scanner;
-
 class App {
+    // ENUMS
     enum GAME_STATE {
-        IN_PROGRESS, FINISHED
+        PREPARATION, IN_PROGRESS, FINISHED
+    }
+
+    enum ACTIVE_PLAYER {
+        PLAYER_1, PLAYER_2
     }
 
     enum SHIP_TYPES {
         AIRCRAFT_CARRIER, BATTLESHIP, SUBMARINE, CRUISER, DESTROYER
     }
 
-    GAME_STATE state = GAME_STATE.IN_PROGRESS;
+
+    // STATIC FIELDS
+    static GAME_STATE currentGameState;
+    static ACTIVE_PLAYER currentActivePlayer;
+
+
+    // STATIC SETTERS
+    static void setGameState(GAME_STATE gameState) {
+        currentGameState = gameState;
+    }
+
+    static void setActivePlayer(ACTIVE_PLAYER activePlayer) {
+        currentActivePlayer = activePlayer;
+    }
 
     void start() {
-        // Prepare game field
-        BattleField bf1 = new BattleField();
-        bf1.printField(BattleField.FIELD_TYPES.PRIVATE_FIELD);
-        System.out.println();
-        placeShips(bf1);
+        // Initialize players
+        setGameState(GAME_STATE.PREPARATION);
+        Player player_1 = new Player();
+        Player player_2 = new Player();
+        // Prepare game fields
+        System.out.println("Player 1, place your ships to the game field\n");
+        player_1.setupField();
 
-        // Start game
+        Helpers.passActionToAnotherPlayer();
+
+        System.out.println("Player 2, place your ships to the game field\n");
+        player_2.setupField();
+
+        Helpers.passActionToAnotherPlayer();
+
+        // GAME LOGIC
+        setGameState(GAME_STATE.IN_PROGRESS);
+        setActivePlayer(ACTIVE_PLAYER.PLAYER_1);
+
         System.out.println("The game starts!\n");
 
-        bf1.printField(BattleField.FIELD_TYPES.PUBLIC_FIELD);
-
-        System.out.println("Take a shot!");
-
-        while (state == GAME_STATE.IN_PROGRESS) {
-            hit(bf1);
+        while (currentGameState == GAME_STATE.IN_PROGRESS) {
+            advanceRound(player_1, player_2);
         }
+
         System.out.println("You sank the last ship. You won. Congratulations!");
     }
 
-    private void placeShips(BattleField field)  {
-        Ship aircraftCarrier = createShip(SHIP_TYPES.AIRCRAFT_CARRIER, field);
-        field.placeShip(aircraftCarrier);
-        field.printField(BattleField.FIELD_TYPES.PRIVATE_FIELD);
-        Ship battleShip = createShip(SHIP_TYPES.BATTLESHIP, field);
-        field.placeShip(battleShip);
-        field.printField(BattleField.FIELD_TYPES.PRIVATE_FIELD);
-        Ship submarine = createShip(SHIP_TYPES.SUBMARINE, field);
-        field.placeShip(submarine);
-        field.printField(BattleField.FIELD_TYPES.PRIVATE_FIELD);
-        Ship cruiser = createShip(SHIP_TYPES.CRUISER, field);
-        field.placeShip(cruiser);
-        field.printField(BattleField.FIELD_TYPES.PRIVATE_FIELD);
-        Ship destroyer = createShip(SHIP_TYPES.DESTROYER, field);
-        field.placeShip(destroyer);
-        field.printField(BattleField.FIELD_TYPES.PRIVATE_FIELD);
-    }
+    private void advanceRound(Player player1, Player player2) {
 
-    private void checkInitialCoordinatesValidity(String name, int numOfCells, int[] startCoordinates, int[] endCoordinates, BattleField field, int[][] occupiedCells) throws WrongCoordinatesException {
-        int fieldSize = field.getSize();
+        String player;
 
-        if (Math.abs(startCoordinates[0] - endCoordinates[0]) != numOfCells - 1 &&
-                Math.abs(startCoordinates[1] - endCoordinates[1]) != numOfCells - 1) {
-            throw new WrongCoordinatesException("Error! Wrong length of the " + name + "! Try again:");
-        }
-
-        if (Math.abs(startCoordinates[0] - endCoordinates[0]) != 0 &&
-                Math.abs(startCoordinates[1] - endCoordinates[1]) != 0) {
-            throw new WrongCoordinatesException("Error! Wrong ship location! Try again:");
-        }
-
-        if (startCoordinates[0] < 0 || startCoordinates[1] < 0 || endCoordinates[0] < 0
-                || endCoordinates[1] < 0 || startCoordinates[0] > fieldSize || startCoordinates[1] > fieldSize
-                || endCoordinates[0] > fieldSize || endCoordinates[1] > fieldSize) {
-            throw new WrongCoordinatesException("Error! Coordinates out of bounds!");
-        }
-
-        if (isShipCollided(occupiedCells, field, fieldSize)) {
-            throw new WrongCoordinatesException("Error! You placed it too close to another one. Try again:");
-        }
-
-    }
-
-    private boolean isShipCollided(int[][] occupiedCells, BattleField field, int fieldSize) {
-        for (int[] cell: occupiedCells) {
-            if ("O".equals(field.getCellData(cell[0], cell[1]))) {
-                return true;
-            }
-            if (cell[0] - 1 >= 0 && "O".equals(field.getCellData(cell[0] - 1, cell[1]))) {
-                return true;
-            }
-            if (cell[0] - 1 >= 0 && cell[1] + 1 < fieldSize && "O".equals(field.getCellData(cell[0] - 1, cell[1] + 1))) {
-                return true;
-            }
-            if (cell[1] + 1 < fieldSize && "O".equals(field.getCellData(cell[0], cell[1] + 1))) {
-                return true;
-            }
-            if (cell[0] + 1 < fieldSize && cell[1] + 1 < fieldSize && "O".equals(field.getCellData(cell[0] + 1, cell[1] + 1))) {
-                return true;
-            }
-            if (cell[0] + 1 < fieldSize && "O".equals(field.getCellData(cell[0] + 1, cell[1]))) {
-                return true;
-            }
-            if (cell[0] + 1 < fieldSize && cell[1] - 1 >= 0 && "O".equals(field.getCellData(cell[0] + 1, cell[1] - 1))) {
-                return true;
-            }
-            if (cell[1] - 1 >= 0 && "O".equals(field.getCellData(cell[0], cell[1] - 1))) {
-                return true;
-            }
-            if (cell[0] - 1 >= 0 && cell[1] - 1 >= 0 && "O".equals(field.getCellData(cell[0] - 1, cell[1] - 1))) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private int convertLetterCoordinateToInteger(String coordinate) {
-        String alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        return alphabet.indexOf(coordinate);
-    }
-
-    private int[][] getShipInitialCoordinates() {
-        Scanner sc = new Scanner(System.in);
-        String startCoordinates = sc.next();
-        String endCoordinates = sc.next();
-
-        if (startCoordinates == null || endCoordinates == null) {
-            throw new IllegalArgumentException("Wrong input");
-        }
-
-        String[] coordinateArray1 = {String.valueOf(startCoordinates.charAt(0)), startCoordinates.substring(1)};
-        String[] coordinateArray2 = {String.valueOf(endCoordinates.charAt(0)), endCoordinates.substring(1)};
-
-        try {
-            int startCoordinate1 = convertLetterCoordinateToInteger(coordinateArray1[0].toUpperCase());
-            int startCoordinate2 = Integer.parseInt(coordinateArray1[1]) - 1;
-            int endCoordinate1 = convertLetterCoordinateToInteger(coordinateArray2[0].toUpperCase());
-            int endCoordinate2 = Integer.parseInt(coordinateArray2[1]) - 1;
-            if (startCoordinate1 > endCoordinate1) {
-                int intermediary = startCoordinate1;
-                startCoordinate1 = endCoordinate1;
-                endCoordinate1 = intermediary;
-            }
-            if (startCoordinate2 > endCoordinate2) {
-                int intermediary = startCoordinate2;
-                startCoordinate2 = endCoordinate2;
-                endCoordinate2 = intermediary;
-            }
-            return new int[][]{{startCoordinate1, startCoordinate2}, {endCoordinate1, endCoordinate2}};
-        } catch (IllegalArgumentException e) {
-            return new int[][]{{-1, -1}, {-1, -1}};
-        }
-    }
-
-    private int[] getHitCoordinates() {
-        Scanner sc = new Scanner(System.in);
-        String coordinatesAsString = sc.next();
-        try {
-            int coordinate1 = convertLetterCoordinateToInteger(String.valueOf(coordinatesAsString.charAt(0)).toUpperCase());
-            int coordinate2 = Integer.parseInt(coordinatesAsString.substring(1)) - 1;
-            return new int[]{coordinate1, coordinate2};
-        } catch (IllegalArgumentException e) {
-            System.out.println("Wrong argument provided");
-        }
-
-        return new int[]{-1, -1};
-    }
-
-    private void hit(BattleField field) {
-        int[] coordinates = getHitCoordinates();
-        while (coordinates[0] < 0 || coordinates[1] < 0 || coordinates[0] > field.getSize() - 1
-        || coordinates[1] > field.getSize() - 1) {
-            System.out.println("Error! You entered the wrong coordinates! Try again:\n");
-            coordinates = getHitCoordinates();
-        }
-        if (field.isHit(coordinates)) {
-            field.updateFields(coordinates, "X");
-            field.printField(BattleField.FIELD_TYPES.PUBLIC_FIELD);
-            System.out.println();
-            // find a ship
-            Ship foundShip = field.findShipAtCoordinates(coordinates);
-            // UPDATE SHIP COORDINATES TO REFLECT DAMAGE
-            foundShip.takeHit(coordinates);
-            // CHECK IF SHIP IS SANK
-            if (foundShip.isShipSank()) {
-                System.out.println("You sank a ship! Specify a new target:\n");
-            } else {
-                System.out.println("You hit a ship! Try again:\n");
-            }
-            // CHECK IF GAME IS OVER
-            if (field.isGameOver()) {
-                state = GAME_STATE.FINISHED;
-            }
+        if(currentActivePlayer == ACTIVE_PLAYER.PLAYER_1) {
+            player = "Player 1";
         } else {
-            field.updateFields(coordinates, "M");
-            field.printField(BattleField.FIELD_TYPES.PUBLIC_FIELD);
-            System.out.println("You missed! Try again:\n");
-        }
-    }
-
-    private Ship createShip(SHIP_TYPES type, BattleField field) {
-        String name;
-        int numberOfCells;
-
-        switch (type) {
-            case AIRCRAFT_CARRIER:
-                name = "Aircraft Carrier";
-                numberOfCells = 5;
-                break;
-            case BATTLESHIP:
-                name = "Battleship";
-                numberOfCells = 4;
-                break;
-            case SUBMARINE:
-                name = "Submarine";
-                numberOfCells = 3;
-                break;
-            case CRUISER:
-                name = "Cruiser";
-                numberOfCells = 3;
-                break;
-            case DESTROYER:
-                name = "Destroyer";
-                numberOfCells = 2;
-                break;
-            default:
-                name = "Unknown";
-                numberOfCells = 0;
-                break;
+            player = "Player 2";
         }
 
-        System.out.printf("Enter the coordinates of the %s (%d cells):", name, numberOfCells);
-        System.out.println();
+        System.out.println(player + ", it's your turn:");
 
-        while (true) {
-            try {
-                int[][] coordinates = getShipInitialCoordinates();
-                int[][] occupiedCells = calculateOccupiedCells(coordinates[0], coordinates[1], numberOfCells);
-                checkInitialCoordinatesValidity(name, numberOfCells, coordinates[0], coordinates[1], field, occupiedCells);
-                return new Ship(name, numberOfCells, coordinates[0], coordinates[1], occupiedCells);
-            } catch (WrongCoordinatesException e) {
-                System.out.println(e.getMessage());
-            }
+        if (currentActivePlayer == ACTIVE_PLAYER.PLAYER_1) {
+            Helpers.printBothFields(player1, player2);
+            player1.hit(player2.getBattleField(), player2);
+            setActivePlayer(ACTIVE_PLAYER.PLAYER_2);
+        } else {
+            Helpers.printBothFields(player2, player1);
+            player2.hit(player1.getBattleField(), player1);
+            setActivePlayer(ACTIVE_PLAYER.PLAYER_1);
         }
-    }
 
-    private int[][] calculateOccupiedCells(int[] startCoordinates, int[] endCoordinates, int numOfCells) {
-        final int NUMBER_OF_COORDINATES = 2;
-        int[][] occupiedCells = new int[numOfCells][NUMBER_OF_COORDINATES];
-        int count = 0;
+        if (currentGameState == GAME_STATE.FINISHED) {
+            return;
+        }
 
-        if ((endCoordinates[1] - startCoordinates[1]) > 0) {
-            int start = startCoordinates[1];
-            while (start <= endCoordinates[1]) {
-                occupiedCells[count] = new int[]{startCoordinates[0], start};
-                if (count < numOfCells - 1) count++;
-                start++;
-            }
-        }
-        if ((endCoordinates[0] - startCoordinates[0]) > 0) {
-            int start = startCoordinates[0];
-            while (start <= endCoordinates[0]) {
-                occupiedCells[count] = new int[]{start, startCoordinates[1]};
-                if (count < numOfCells - 1) count++;
-                start++;
-            }
-        }
-        return occupiedCells;
+        Helpers.passActionToAnotherPlayer();
     }
 }
+
+
+
