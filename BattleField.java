@@ -70,12 +70,20 @@ class BattleField {
         return letterCoordinateArray;
     }
 
-    public void placeShip(Ship ship) {
+    void placeShip(Ship ship) {
         int[][] occupiedCells = ship.getOccupiedCells();
 
         for (int[] cellCoordinate: occupiedCells) {
             startingField[cellCoordinate[0]][cellCoordinate[1]] = "O";
         }
+    }
+
+    boolean isHit(int[] coordinates) {
+        return "O".equals(startingField[coordinates[0]][coordinates[1]]);
+    }
+
+    void updateField(int[] coordinates, String value) {
+        startingField[coordinates[0]][coordinates[1]] = value;
     }
 
 }

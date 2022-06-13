@@ -13,7 +13,9 @@ class App {
         bf1.printCurrentField();
         System.out.println();
         placeShips(bf1);
-
+        System.out.println("The game starts");
+        bf1.printCurrentField();
+        hit(bf1);
 
     }
 
@@ -35,7 +37,7 @@ class App {
         field.printCurrentField();
     }
 
-    private void checkCoordinatesValidity(String name, int numOfCells, int[] startCoordinates, int[] endCoordinates, BattleField field, int[][] occupiedCells) throws WrongCoordinatesException {
+    private void checkInitialCoordinatesValidity(String name, int numOfCells, int[] startCoordinates, int[] endCoordinates, BattleField field, int[][] occupiedCells) throws WrongCoordinatesException {
         int fieldSize = field.getSize();
 
         if (Math.abs(startCoordinates[0] - endCoordinates[0]) != numOfCells - 1 &&
@@ -98,7 +100,7 @@ class App {
         return alphabet.indexOf(coordinate);
     }
 
-    private int[][] getCoordinates() {
+    private int[][] getShipInitialCoordinates() {
         Scanner sc = new Scanner(System.in);
         String startCoordinates = sc.next();
         String endCoordinates = sc.next();
@@ -129,7 +131,38 @@ class App {
         } catch (IllegalArgumentException e) {
             return new int[][]{{-1, -1}, {-1, -1}};
         }
+    }
 
+    private int[] getHitCoordinates() {
+        Scanner sc = new Scanner(System.in);
+        String coordinatesAsString = sc.next();
+        try {
+            int coordinate1 = convertLetterCoordinateToInteger(String.valueOf(coordinatesAsString.charAt(0)));
+            int coordinate2 = Integer.parseInt(coordinatesAsString.substring(1)) - 1;
+            return new int[]{coordinate1, coordinate2};
+        } catch (IllegalArgumentException e) {
+            System.out.println("Wrong argument provided");
+        }
+
+        return new int[]{-1, -1};
+    }
+
+    private void hit(BattleField field) {
+        System.out.println("Take a shot!");
+        int[] coordinates = getHitCoordinates();
+        while (coordinates[0] < 0 || coordinates[1] < 0 || coordinates[0] > field.getSize() - 1
+        || coordinates[1] > field.getSize() - 1) {
+            System.out.println("Error! You entered the wrong coordinates! Try again:");
+            coordinates = getHitCoordinates();
+        }
+        if (field.isHit(coordinates)) {
+            field.updateField(coordinates, "X");
+            System.out.println("You hit a ship!");
+        } else {
+            field.updateField(coordinates, "M");
+            System.out.println("You missed!");
+        }
+        field.printCurrentField();
     }
 
     private Ship createShip(SHIP_TYPES type, BattleField field) {
@@ -168,9 +201,9 @@ class App {
 
         while (true) {
             try {
-                int[][] coordinates = getCoordinates();
+                int[][] coordinates = getShipInitialCoordinates();
                 int[][] occupiedCells = calculateOccupiedCells(coordinates[0], coordinates[1], numberOfCells);
-                checkCoordinatesValidity(name, numberOfCells, coordinates[0], coordinates[1], field, occupiedCells);
+                checkInitialCoordinatesValidity(name, numberOfCells, coordinates[0], coordinates[1], field, occupiedCells);
                 return new Ship(name, numberOfCells, coordinates[0], coordinates[1], occupiedCells);
             } catch (WrongCoordinatesException e) {
                 System.out.println(e.getMessage());
